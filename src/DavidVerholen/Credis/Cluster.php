@@ -8,24 +8,25 @@
  * @package Credis
  */
 
+namespace DavidVerholen\Credis;
 /**
- * A generalized Credis_Client interface for a cluster of Redis servers
+ * A generalized Client interface for a cluster of Redis servers
  */
-class Credis_Cluster
+class Cluster
 {
   /**
-   * Collection of Credis_Client objects attached to Redis servers
-   * @var Credis_Client[]
+   * Collection of Client objects attached to Redis servers
+   * @var Client[]
    */
   protected $clients;
   /**
    * If a server is set as master, all write commands go to that one
-   * @var Credis_Client
+   * @var Client
    */
   protected $masterClient;
   /**
-   * Aliases of Credis_Client objects attached to Redis servers, used to route commands to specific servers
-   * @see Credis_Cluster::to
+   * Aliases of Client objects attached to Redis servers, used to route commands to specific servers
+   * @see Cluster::to
    * @var array
    */
   protected $aliases;
@@ -79,7 +80,7 @@ class Credis_Cluster
     foreach ($servers as $server)
     {
       if(is_array($server)){
-          $client = new Credis_Client(
+          $client = new Client(
             $server['host'],
             $server['port'],
             isset($server['timeout']) ? $server['timeout'] : 2.5,
@@ -96,10 +97,10 @@ class Credis_Cluster
                 continue;
             }
           }
-      } elseif($server instanceof Credis_Client){
+      } elseif($server instanceof Client){
         $client = $server;
       } else {
-          throw new CredisException('Server should either be an array or an instance of Credis_Client');
+          throw new CredisException('Server should either be an array or an instance of Client');
       }
       if($standAlone) {
           $client->forceStandalone();
@@ -129,14 +130,14 @@ class Credis_Cluster
   }
 
   /**
-   * @param Credis_Client $masterClient
+   * @param Client $masterClient
    * @param bool $writeOnly
-   * @return Credis_Cluster
+   * @return Cluster
    */
-  public function setMasterClient(Credis_Client $masterClient, $writeOnly=false)
+  public function setMasterClient(Client $masterClient, $writeOnly=false)
   {
-    if(!$masterClient instanceof Credis_Client){
-        throw new CredisException('Master client should be an instance of Credis_Client');
+    if(!$masterClient instanceof Client){
+        throw new CredisException('Master client should be an instance of Client');
     }
     $this->masterClient = $masterClient;
     if (!isset($this->aliases['master'])) {
@@ -157,7 +158,7 @@ class Credis_Cluster
    *
    * @param string|int $alias
    * @throws CredisException
-   * @return Credis_Client
+   * @return Client
    */
   public function client($alias)
   {
@@ -173,7 +174,7 @@ class Credis_Cluster
   /**
    * Get an array of all clients
    *
-   * @return array|Credis_Client[]
+   * @return array|Client[]
    */
   public function clients()
   {
@@ -200,7 +201,7 @@ class Credis_Cluster
    * Get the client that the key would hash to.
    *
    * @param string $key
-   * @return \Credis_Client
+   * @return \Client
    */
   public function byHash($key)
   {

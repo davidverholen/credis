@@ -1,38 +1,40 @@
 <?php
+
+namespace DavidVerholen\Credis;
 /**
- * Credis_Sentinel
+ * Sentinel
  *
  * Implements the Sentinel API as mentioned on http://redis.io/topics/sentinel.
- * Sentinel is aware of master and slave nodes in a cluster and returns instances of Credis_Client accordingly.
+ * Sentinel is aware of master and slave nodes in a cluster and returns instances of Client accordingly.
  *
  * The complexity of read/write splitting can also be abstract by calling the createCluster() method which returns a
- * Credis_Cluster object that contains both the master server and a random slave. Credis_Cluster takes care of the
+ * Cluster object that contains both the master server and a random slave. Cluster takes care of the
  * read/write splitting
  *
  * @author Thijs Feryn <thijs@feryn.eu>
  * @license http://www.opensource.org/licenses/mit-license.php The MIT License
- * @package Credis_Sentinel
+ * @package Sentinel
  */
-class Credis_Sentinel
+class Sentinel
 {
     /**
      * Contains a client that connects to a Sentinel node.
-     * Sentinel uses the same protocol as Redis which makes using Credis_Client convenient.
-     * @var Credis_Client
+     * Sentinel uses the same protocol as Redis which makes using Client convenient.
+     * @var Client
      */
     protected $_client;
     /**
-     * Contains an active instance of Credis_Cluster per master pool
+     * Contains an active instance of Cluster per master pool
      * @var Array
      */
     protected $_cluster = array();
     /**
-     * Contains an active instance of Credis_Client representing a master
+     * Contains an active instance of Client representing a master
      * @var Array
      */
     protected $_master = array();
     /**
-     * Contains an array Credis_Client objects representing all slaves per master pool
+     * Contains an array Client objects representing all slaves per master pool
      * @var Array
      */
     protected $_slaves = array();
@@ -43,18 +45,18 @@ class Credis_Sentinel
     protected $_standAlone = false;
     /**
      * Connect with a Sentinel node. Sentinel will do the master and slave discovery
-     * @param Credis_Client $client
+     * @param Client $client
      */
-    public function __construct(Credis_Client $client)
+    public function __construct(Client $client)
     {
-        if(!$client instanceof Credis_Client){
-            throw new CredisException('Sentinel client should be an instance of Credis_Client');
+        if(!$client instanceof Client){
+            throw new CredisException('Sentinel client should be an instance of Client');
         }
         $client->forceStandalone();
         $this->_client = $client;
     }
     /**
-     * @return Credis_Sentinel
+     * @return Sentinel
      */
     public function forceStandalone()
     {
@@ -62,9 +64,9 @@ class Credis_Sentinel
         return $this;
     }
     /**
-     * Discover the master node automatically and return an instance of Credis_Client that connects to the master
+     * Discover the master node automatically and return an instance of Client that connects to the master
      * @param string $name
-     * @return Credis_Client
+     * @return Client
      */
     public function createMasterClient($name)
     {
@@ -72,12 +74,12 @@ class Credis_Sentinel
         if(!isset($master[0]) || !isset($master[1])){
             throw new CredisException('Master not found');
         }
-        return new Credis_Client($master[0],$master[1]);
+        return new Client($master[0],$master[1]);
     }
     /**
-     * If a Credis_Client object exists for a master, return it. Otherwise create one and return it
+     * If a Client object exists for a master, return it. Otherwise create one and return it
      * @param string $name
-     * @return Credis_Client
+     * @return Client
      */
     public function getMasterClient($name)
     {
@@ -87,9 +89,9 @@ class Credis_Sentinel
         return $this->_master[$name];
     }
     /**
-     * Discover the slave nodes automatically and return an array of Credis_Client objects
+     * Discover the slave nodes automatically and return an array of Client objects
      * @param string $name
-     * @return Credis_Client[]
+     * @return Client[]
      */
     public function createSlaveClients($name)
     {
@@ -100,15 +102,15 @@ class Credis_Sentinel
                 throw new CredisException('Can\' retrieve slave status');
             }
             if(!strstr($slave[9],'s_down') && !strstr($slave[9],'disconnected')) {
-                $workingSlaves[] = new Credis_Client($slave[3],$slave[5]);
+                $workingSlaves[] = new Client($slave[3],$slave[5]);
             }
         }
         return $workingSlaves;
     }
     /**
-     * If an array of Credis_Client objects exist for a set of slaves, return them. Otherwise create and return them
+     * If an array of Client objects exist for a set of slaves, return them. Otherwise create and return them
      * @param string $name
-     * @return Credis_Client[]
+     * @return Client[]
      */
     public function getSlaveClients($name)
     {
@@ -120,14 +122,14 @@ class Credis_Sentinel
     /**
      * Returns a Redis cluster object containing a random slave and the master
      * When $selectRandomSlave is true, only one random slave is passed.
-     * When $selectRandomSlave is false, all clients are passed and hashing is applied in Credis_Cluster
+     * When $selectRandomSlave is false, all clients are passed and hashing is applied in Cluster
      * When $writeOnly is false, the master server will also be used for read commands.
      * @param string $name
      * @param int $db
      * @param int $replicas
      * @param bool $selectRandomSlave
      * @param bool $writeOnly
-     * @return Credis_Cluster
+     * @return Cluster
      */
     public function createCluster($name, $db=0, $replicas=128, $selectRandomSlave=true, $writeOnly=false)
     {
@@ -154,16 +156,16 @@ class Credis_Sentinel
             }
         }
         $clients[] = array('host'=>$master[3],'port'=>$master[5], 'db'=>$db ,'master'=>true,'write_only'=>$writeOnly);
-        return new Credis_Cluster($clients,$replicas,$this->_standAlone);
+        return new Cluster($clients,$replicas,$this->_standAlone);
     }
     /**
-     * If a Credis_Cluster object exists, return it. Otherwise create one and return it.
+     * If a Cluster object exists, return it. Otherwise create one and return it.
      * @param string $name
      * @param int $db
      * @param int $replicas
      * @param bool $selectRandomSlave
      * @param bool $writeOnly
-     * @return Credis_Cluster
+     * @return Cluster
      */
     public function getCluster($name, $db=0, $replicas=128, $selectRandomSlave=true, $writeOnly=false)
     {

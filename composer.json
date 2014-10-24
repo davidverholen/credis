@@ -1,23 +1,21 @@
 {
-	"name": "colinmollenhour/credis",
+	"name": "davidverholen/credis",
 	"type": "library",
 	"description": "Credis is a lightweight interface to the Redis key-value store which wraps the phpredis library when available for better performance.",
-	"homepage": "https://github.com/colinmollenhour/credis",
-	"license": "MIT",
+	"homepage": "https://github.com/davidverholen/credis",
+	"license": "OSL-3.0",
 	"authors": [
 		{
-			"name": "Colin Mollenhour",
-			"email": "colin@mollenhour.com"
+			"name": "David Verholen",
+			"email": "david@verholen.com"
 		}
 	],
 	"require": {
 		"php": ">=5.3.0"
 	},
 	"autoload": {
-		"classmap": [
-			"Client.php",
-			"Cluster.php",
-            "Sentinel.php"
-		]
+        "psr-0": {
+            "DavidVerholen\\Credis": "src/"
+        }
 	}
 }
